@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>｜華谷電機｜自選單格照片拉霸機｜v2025.10.20-1|製作者：華谷電機機工課雷射組 副組長 李書宏|</title>
+  <link rel="icon" type="image/x-icon" href="./icon.ico" />
+  <link rel="stylesheet" href="styles.css" />
+  <script>
+    (() => {
+      const base = 1920, raw = window.screen.width / base;
+      const scale = Math.max(1, Math.min(2, raw));
+      document.addEventListener('DOMContentLoaded', () => {
+        document.documentElement.style.zoom = scale.toFixed(2);
+      });
+    })();
+  </script>
+</head>
+
+<body>
+  <!-- 右上角工具列 -->
+  <div class="topbar">
+    <button id="openGalleryBtn" class="btn pill small">📷 圖庫管理</button>
+  </div>
+
+  <div class="title-banner">
+    <h1>🎰 華谷電機照片拉霸機 🎰</h1>
+  </div>
+
+  <div class="wrap">
+    <div class="machine">
+      <!-- ✅ 單格：僅保留 r1，其餘不動 -->
+      <div class="slot"><img id="r1" alt="reel-1" /></div>
+    </div>
+
+    <div id="msg" class="message">請先載入 3～10 張照片。</div>
+
+    <div class="control-bar">
+      <div class="wing left">
+        <div class="toggle" id="muteBtn">🔊 聲音：開</div>
+        <label>音量 <input type="range" id="vol" min="0" max="100" value="70" /></label>
+      
+  <label>🎚 拉霸時間：
+    <input id="spinTimeRange" type="range" min="0" max="10" step="3">
+  </label>
+  <span id="spinTimeValue"></span> 秒
+</div>
+
+      <div class="center">
+        <button id="panelSpinBtn" class="btn primary disabled">🎰 拉霸！( START )</button>
+      </div>
+
+      <div class="wing right">
+        <div class="stat" id="totalStat">總連線中獎次數：0</div>
+        <div class="version-text" id="versionText">版本：v2025.10.20-1</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ⚙️ 參數調整面板（需密碼） -->
+  <details class="config">
+    <summary>⚙️ 參數調整面板（需密碼）</summary>
+
+    <div id="passwordArea">
+      <input type="password" id="passInput" placeholder="輸入密碼" />
+      <button class="btn" id="passBtn">確定</button>
+      <span id="passMsg"></span>
+    </div>
+
+    <div id="cfgContainer" style="display:none;">
+      <div class="muted">
+        上限：0 或空白＝不限制。達上限者會暫時移出轉盤，重置後回復。
+      </div>
+
+      <div id="cfg" class="cfg-grid"></div>
+
+      <div class="cfg-actions">
+        <button class="btn" id="applyBtn">套用設定</button>
+        <button class="btn" id="resetWinsAllBtn">重置遊戲</button>
+        <button class="btn" id="resetBtn">重置預設</button>
+      </div>
+    </div>
+  </details>
+
+  <!-- ✅ 首次必選照片的選圖層 -->
+  <div id="pickerOverlay" class="overlay" style="display:none;">
+    <div class="overlay-card">
+      <h2>載入你的照片</h2>
+      <p>請選擇 <b>3～10 張</b> 圖片（JPG/PNG）。</p>
+      <div class="overlay-actions">
+        <button id="chooseBtn" class="btn primary">選擇照片</button>
+      </div>
+      <p class="muted">＊請載入照片，系統抓檔名區分權重。＊</p>
+    </div>
+  </div>
+
+  <!-- 🪟 懸浮視窗：圖庫管理 -->
+  <div id="galleryModal" class="modal" aria-hidden="true">
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="galleryTitle">
+      <div class="modal-head">
+        <h3 id="galleryTitle">📷 圖庫管理</h3>
+        <button id="closeGalleryBtn" class="iconbtn" aria-label="關閉">✕</button>
+      </div>
+      <div class="gallery-toolbar">
+        <button id="addBtn" class="btn">新增照片</button>
+        <span class="muted">目前：<b id="countText">0</b> / 10 張</span>
+        <div class="grow"></div>
+        <button id="clearAllBtn" class="btn danger">清空圖庫</button>
+      </div>
+      <div id="galleryGrid" class="gallery-grid"></div>
+    </div>
+  </div>
+
+  <!-- 📁 隱藏檔案選擇器們 -->
+  <input id="filePicker" type="file" accept="image/*" multiple style="display:none;" />
+  <input id="addPicker"  type="file" accept="image/*" multiple style="display:none;" />
+
+  <script src="script.js"></script>
+</body>
+</html>

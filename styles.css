@@ -1,0 +1,252 @@
+:root{
+  --bg1:#0b0c14; --bg2:#000; --ink:#e9ecf2; --frame:#292e42;
+  --accent:#ffd54a; --ok:#38ef7d; --bad:#ff6b6b; --gold:#f5c542;
+  --slot-min: 280px; --slot-max: 720px; --wrap-max: 2400px;
+  /* 維持原本比例 (/3)，避免圖片放大變形 */
+  --slot-size: clamp(var(--slot-min), calc((min(100vw, var(--wrap-max)) - 160px)/3), var(--slot-max));
+}
+
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{
+  color:var(--ink);
+  font-family:"Noto Sans TC",system-ui,Segoe UI,Roboto,Arial,sans-serif;
+  background:
+    url("./bg_unicorn.png") center/cover no-repeat fixed,
+    radial-gradient(circle at 50% 25%, #14172a 0%, var(--bg2) 70%);
+  background-attachment: fixed;
+  display:flex; flex-direction:column; align-items:center; gap:16px;
+  overflow-x:hidden; overflow-y:auto; padding-bottom:260px;
+}
+
+/* 右上角工具列 */
+.topbar{
+  position:fixed; top:10px; right:12px; z-index:20;
+  display:flex; gap:8px; align-items:center;
+}
+.btn,.toggle,.pill{
+  background:#171a2a; border:1px solid #2b3044; color:#cfd3df;
+  padding:8px 12px; border-radius:10px; cursor:pointer;
+  box-shadow:0 8px 20px rgba(0,0,0,.35); user-select:none;
+}
+.btn.small{ padding:6px 10px; font-size:14px }
+.btn.danger{ border-color:#6b2323; background:#2a1717; color:#ffb3b3 }
+
+h1{
+  display:inline-block; margin:16px 0 0; padding:10px 24px;
+  background:linear-gradient(180deg,#14192b,#0f1120);
+  color:#ffd54a; font-weight:800; letter-spacing:2px; text-align:center;
+  border:2px solid #292e42; border-radius:12px;
+  box-shadow:inset 0 0 0 2px #0b0d18, 0 6px 18px rgba(0,0,0,.4), 0 0 20px rgba(255,213,74,.25);
+  text-shadow:0 0 10px rgba(255,213,74,.6), 0 0 20px rgba(255,160,0,.4);
+}
+
+.wrap{
+  padding:22px; background:linear-gradient(180deg,#14192b,#0f1120);
+  border:2px solid var(--frame); border-radius:22px;
+  box-shadow:inset 0 0 0 2px #0b0d18, 0 30px 70px rgba(0,0,0,.55);
+  width:100%;
+  max-width:min(calc(100vw - 64px), calc(3*var(--slot-size) + 96px));
+  margin:0 auto;
+}
+
+.machine{
+  display:grid; grid-template-columns:repeat(3,1fr);
+  gap:24px; padding:24px; background:#0e1020; border:2px solid #23283a; border-radius:16px;
+  width:100%;
+  max-width:min(calc(100vw - 64px), calc(3*var(--slot-size) + 96px));
+  margin:0 auto;
+}
+
+/* 單格自動置中（不改尺寸計算） */
+.machine > .slot:only-child{ grid-column:2 / span 1; }
+
+.slot{
+  width:100%; aspect-ratio:1/1; position:relative; overflow:hidden; border-radius:14px;
+  border:3px solid #3c4055; background:#0b0d18; box-shadow:inset 0 0 20px rgba(0,0,0,.7);
+}
+.slot img{
+  position:absolute; inset:0; width:100%; height:100%; object-fit:contain;
+  background:#0b0d18; filter:brightness(.98) contrast(1.02);
+}
+.slot.spin::after{
+  content:""; position:absolute; inset:0; border-radius:12px; border:1px solid rgba(255,213,74,.25);
+  box-shadow:0 0 26px rgba(255,213,74,.18), inset 0 0 24px rgba(255,213,74,.08);
+  animation:pulse .4s infinite alternate;
+}
+@keyframes pulse{from{opacity:.4}to{opacity:1}}
+.blur{filter:brightness(.95) contrast(1.03) blur(2px)}
+.message{margin-top:10px;text-align:center}
+.message.ok{color:var(--ok)}
+.message.bad{color:var(--bad)}
+.slot.win{
+  border-color:var(--gold);
+  box-shadow:0 0 32px rgba(245,197,66,.55), inset 0 0 18px rgba(245,197,66,.25);
+  animation:shake .45s;
+}
+@keyframes shake{
+  0%{transform:translateX(0)}
+  20%{translate:-2px}
+  40%{translate:2px}
+  60%{translate:-1px}
+  80%{translate:1px}
+  100%{transform:translateX(0)}
+}
+
+.win-flash::before{
+  content:""; position:fixed; inset:-10vmax; pointer-events:none;
+  background:
+    radial-gradient(circle, rgba(255,255,255,.85), rgba(255,255,255,0) 40%),
+    radial-gradient(circle at 30% 30%, rgba(255,215,64,.7), rgba(255,215,64,0) 45%),
+    radial-gradient(circle at 70% 70%, rgba(120,200,255,.6), rgba(120,200,255,0) 45%);
+  mix-blend-mode:screen; filter:blur(2px); animation:flashPop .9s ease-out forwards;
+}
+@keyframes flashPop{
+  0%{opacity:0;transform:scale(.8)}
+  15%{opacity:1;transform:scale(1)}
+  60%{opacity:.9}
+  100%{opacity:0;transform:scale(1.25)}
+}
+
+/* 控制列 */
+.control-bar{
+  position:relative; display:flex; align-items:center; justify-content:center;
+  width:100%;
+  max-width:min(calc(100vw - 64px), calc(3*var(--slot-max) + 96px));
+  margin:12px auto 0; padding:0 24px;
+}
+.control-bar .wing.left{ position:absolute; left:24px; display:flex; align-items:center; gap:12px; }
+.control-bar .wing.left label{ display:flex; align-items:center; gap:6px; margin:0 }
+.control-bar .center{ display:flex; justify-content:center; align-items:center }
+.control-bar .wing.right{ position:absolute; right:24px; display:flex; align-items:flex-end; flex-direction:column }
+#panelSpinBtn{
+  display:block; margin:12px auto 0; transform:translateY(-4px);
+  background:linear-gradient(180deg,#ff6aa6,#ff3b7c); color:#fff; border:0; border-radius:12px;
+  padding:12px 26px; font-size:18px; font-weight:800; box-shadow:0 6px 18px rgba(255,64,128,.45);
+  transition:transform .15s, box-shadow .15s, opacity .15s;
+}
+#panelSpinBtn:hover{ transform:translateY(-6px); box-shadow:0 10px 24px rgba(255,64,128,.55) }
+#panelSpinBtn:active{ transform:translateY(-2px) }
+#panelSpinBtn.disabled{ opacity:.55; pointer-events:none }
+.version-text{ font-size:13px; color:#9ca3af; margin-top:4px; opacity:.85; text-align:right }
+
+/* 參數面板 */
+details.config{
+  width:100%; max-width:1100px; background:#0f1222; border:1px solid #2b3044;
+  border-radius:14px; padding:10px 12px; color:#cfd3df; margin:16px auto 8px;
+}
+#cfg{
+  display:grid; grid-template-columns:1.2fr .9fr 1.1fr .5fr .8fr .6fr;
+  gap:8px; align-items:center;
+}
+#cfg .hdr{ font-weight:700; opacity:.9 }
+#cfg input{
+  width:100%; padding:8px 10px; border:1px solid #3a415a;
+  background:#12162a; color:#e7ebf8; border-radius:8px;
+}
+#cfg .prevBox{
+  width:90px; height:90px; display:flex; align-items:center; justify-content:center;
+  border:1px solid #3a415a; border-radius:8px; background:#0b0d18;
+  position:relative; overflow:hidden;
+}
+#cfg .prevBox img{
+  width:100%; height:100%; object-fit:contain; border-radius:6px; background:#0b0d18;
+}
+.cfg-actions{ display:flex; gap:8px; justify-content:flex-end; }
+.muted{ color:#9fb2ff; font-size:12px }
+
+/* 懸浮視窗：圖庫管理 */
+.modal{
+  position:fixed; inset:0; z-index:100; display:none; align-items:center; justify-content:center;
+  background:rgba(0,0,0,.55); backdrop-filter:blur(4px);
+}
+.modal.show{ display:flex; }
+.modal-card{
+  width:min(92vw, 1020px); max-height:80vh; overflow:auto;
+  background:#0f1222; color:#e7ebf8; border:1px solid #2b3044; border-radius:14px; padding:14px 12px 16px;
+  box-shadow:0 24px 80px rgba(0,0,0,.5);
+}
+.modal-head{
+  display:flex; align-items:center; justify-content:space-between; gap:8px;
+  padding:4px 6px 10px; border-bottom:1px solid #2b3044;
+}
+.iconbtn{ background:#171a2a; border:1px solid #2b3044; color:#cfd3df; border-radius:8px; padding:6px 10px; cursor:pointer; }
+
+.gallery-toolbar{ display:flex; align-items:center; gap:10px; margin:10px 6px 12px; }
+.gallery-toolbar .grow{ flex:1 }
+.gallery-grid{
+  display:grid; grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); gap:10px; padding:4px 6px 10px;
+}
+.gitem{
+  position:relative; background:#0b0d18; border:1px solid #3a415a; border-radius:10px;
+  padding:8px; display:flex; align-items:center; justify-content:center; aspect-ratio:1/1;
+}
+.gitem img{ width:100%; height:100%; object-fit:contain }
+.gitem .rm{
+  position:absolute; top:6px; right:6px; border:none; border-radius:8px;
+  padding:4px 8px; background:#2a1717; color:#ffb3b3; cursor:pointer;
+}
+
+/* 開機選圖層 */
+.overlay{
+  position:fixed; inset:0; z-index:90; display:flex; align-items:center; justify-content:center;
+  background:rgba(0,0,0,.55); backdrop-filter:blur(4px);
+}
+.overlay-card{
+  width:min(92vw, 560px); background:#0f1222; color:#e7ebf8; border:1px solid #2b3044;
+  border-radius:14px; padding:22px; text-align:center; box-shadow:0 24px 80px rgba(0,0,0,.5);
+}
+.overlay-actions{ display:flex; gap:10px; justify-content:center; margin-top:12px }
+
+/* RWD */
+@media (max-width:1024px){
+  #cfg{ grid-template-columns:1fr .8fr 1fr .5fr .8fr .6fr; }
+}
+@media (max-width:600px){
+  #panelSpinBtn{ font-size:16px; padding:11px 22px; transform:translateY(-2px) }
+}
+
+/* Hover 放大預覽（參數面板＋圖庫） */
+@media (hover: hover){
+  #cfg .prevBox{ position:relative; overflow:hidden; transition:transform .15s, box-shadow .15s; }
+  #cfg .prevBox img{
+    width:100%; height:100%; object-fit:contain; border-radius:6px; background:#0b0d18;
+    transition:transform .15s, box-shadow .15s, filter .15s; transform-origin:center center;
+  }
+  #cfg .prevBox:hover{ overflow:visible; z-index:50; }
+  #cfg .prevBox:hover img{ transform:scale(5); box-shadow:0 12px 26px rgba(0,0,0,.55); filter:brightness(1) contrast(1.05); }
+
+  .gitem{ position:relative; overflow:hidden; }
+  .gitem img{ transition:transform .15s, box-shadow .15s, filter .15s; transform-origin:center center; }
+  .gitem:hover{ overflow:visible; z-index:40; }
+  .gitem:hover img{ transform:scale(2.6); box-shadow:0 12px 26px rgba(0,0,0,.55); filter:brightness(1) contrast(1.05); }
+}
+
+/* ===== 單格穩定修正（只追加，不改原樣） ===================== */
+/* 支援 :has 的情況：單格時把外框縮到單格寬，並改為單欄 */
+.machine:has(.slot:only-child){
+  max-width:min(calc(100vw - 64px), calc(var(--slot-size) + 96px));
+  grid-template-columns:repeat(1,1fr);
+}
+/* 不論是否支援 :has，都讓單格置中並確保正確大小 */
+.machine{ justify-items:center; }
+.machine > .slot:only-child{ grid-column:2 / span 1; }
+.machine > .slot{
+  width:var(--slot-size);
+  max-width:100%;
+  min-height:var(--slot-min);
+}
+
+/* 拉霸時間滑桿樣式 */
+#spinTimeRange {
+  width: 120px;
+  accent-color: #ff3b7c;
+  vertical-align: middle;
+}
+#spinTimeValue {
+  display: inline-block;
+  width: 24px;
+  text-align: center;
+  color: #ffd54a;
+  font-weight: 700;
+}

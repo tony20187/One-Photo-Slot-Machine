@@ -1,0 +1,45 @@
+{
+  "name": "one-photo-slot-machine",
+  "version": "2025.10.21-1",
+  "private": true,
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder"
+  },
+  "build": {
+    "appId": "com.huagu.slot.v6",
+    "productName": "華谷單格照片自選拉霸機",
+    "directories": { "output": "release" },
+    "files": [
+      "index.html",
+      "styles.css",
+      "script.js",
+      "main.js",
+      "icon.ico",
+      "bg_unicorn.png"
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "icon.ico",
+      "artifactName": "${productName}-Setup-${version}.exe"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowElevation": true,
+      "allowToChangeInstallationDirectory": true,
+      "perMachine": false,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "華谷單格照片自選拉霸機",
+      "runAfterFinish": true,
+      "installerIcon": "icon.ico",
+      "uninstallerIcon": "icon.ico",
+      "installerHeaderIcon": "icon.ico"
+    }
+  },
+  "devDependencies": {
+    "electron": "^31.0.0",
+    "electron-builder": "^26.0.12"
+  }
+}
