@@ -3,14 +3,14 @@
   const LS_SYMBOL_LIMITS = "slot_symbol_limits_no_payout_v1";
   const LS_FORCE_RATE   = "slot_force_jackpot_rate_percent_v1";
   const LS_SESSION_WINS = "slot_session_wins_v1";
-  const LS_SPIN_TIME    = "slot_spin_time_sec_v1";   // 🆕 拉霸時間(秒)
+  const LS_SPIN_TIME    = "slot_spin_time_sec_v1";   // 拉霸時間(秒)
 
   // 相片池（使用者自選）
   let symbols = [];                 // {file,label,weight}
   let symbolLimits = {};            // {file:{maxWins,wins}}
   let spinning=false, spinInterval=null, isMuted=false, bag=[], plannedFinal=null;
 
-  // 🆕 自動停止計時
+  // 自動停止計時
   let pendingTimer = null;
   let pendingHit   = null;
 
@@ -23,25 +23,33 @@
   const panelSpinBtn = document.getElementById("panelSpinBtn");
   const root = document.body;
 
-  // 🆕 拉霸時間控制（若 HTML 沒放滑桿，仍以預設3秒運作）
+  // === 拉霸時間控制：每次載入都強制預設 3 秒 =====================
   const spinTimeRange = document.getElementById("spinTimeRange");
   const spinTimeValue = document.getElementById("spinTimeValue");
-  let spinTimeSec = (() => {
-    const v = Number(localStorage.getItem(LS_SPIN_TIME));
-    if (Number.isFinite(v)) return Math.max(0, Math.min(10, Math.floor(v)));
-    return 3; // 預設 3s
-  })();
+
+  const DEFAULT_SPIN_TIME = 3;            // 預設 3s（重開程式/網頁一律回到 3）
+  let spinTimeSec = DEFAULT_SPIN_TIME;
+
   function syncSpinTimeUI() {
     if (spinTimeRange) spinTimeRange.value = String(spinTimeSec);
     if (spinTimeValue) spinTimeValue.textContent = String(spinTimeSec);
   }
-  syncSpinTimeUI();
+
+  // 每次載入都覆寫成預設值（不管上次存了什麼）
+  (function resetSpinTimeToDefaultOnLoad(){
+    spinTimeSec = DEFAULT_SPIN_TIME;
+    try { localStorage.setItem(LS_SPIN_TIME, String(DEFAULT_SPIN_TIME)); } catch(e){}
+    syncSpinTimeUI();
+  })();
+
+  // 遊玩期間可調整；但只要重開，會再次被重置為 3 秒
   spinTimeRange?.addEventListener("input", () => {
     const v = Math.max(0, Math.min(10, Math.floor(Number(spinTimeRange.value)||0)));
     spinTimeSec = v;
-    localStorage.setItem(LS_SPIN_TIME, String(v));
+    try { localStorage.setItem(LS_SPIN_TIME, String(v)); } catch(e){}
     syncSpinTimeUI();
   });
+  // ============================================================
 
   // 圖庫（Modal）
   const openGalleryBtn = document.getElementById("openGalleryBtn");
@@ -57,7 +65,7 @@
   const chooseBtn = document.getElementById("chooseBtn");
   const filePicker= document.getElementById("filePicker");
 
-  // 隱藏檔案選擇器（新增）
+  // 隱藏檔案選擇器
   const addPicker = document.getElementById("addPicker");
 
   // 強制中獎機率(%)
@@ -152,7 +160,7 @@
     if(isMuted) return; ensureAudio();
     const o=ctx.createOscillator(), g=ctx.createGain();
     o.type="sine"; o.frequency.value=300; g.gain.value=0.0001;
-    o.connect(g).connect(masterGain);              // ✅ 修正語法
+    o.connect(g).connect(masterGain);              // 修正語法
     const t=ctx.currentTime; o.start(t);
     g.gain.exponentialRampToValueAtTime((Number(vol?.value||70)/100)*0.25, t+0.05);
     g.gain.exponentialRampToValueAtTime(0.0001, t+0.35); o.stop(t+0.4);
@@ -188,7 +196,7 @@
     setTimeout(()=>s.classList.remove("win"),700);
   }
 
-  // 🆕 統一的停止＋結算
+  // 統一的停止＋結算
   function stopAndFinishAt(finalSym, hit){
     if(!spinning) return;
     stopReel(finalSym);
@@ -202,7 +210,7 @@
     sfxSpinStart(); panelSpinBtn?.classList.add('press-glow','disabled');
     startReel(55);
 
-    // 🆕 依設定秒數（0~10s，預設3s）自動停止
+    // 依設定秒數（重開預設3s；可調 0~10s）自動停止
     const rate = Math.min(100, Math.max(0, Number(FORCE_JACKPOT_RATE_PERCENT)||0)) / 100;
     pendingHit   = Math.random() < rate;
     plannedFinal = pick();
