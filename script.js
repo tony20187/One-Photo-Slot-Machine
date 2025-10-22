@@ -1,7 +1,6 @@
 (() => {
   const PASSWORD = "0423594446";
   const LS_SYMBOL_LIMITS = "slot_symbol_limits_no_payout_v1";
-  const LS_FORCE_RATE   = "slot_force_jackpot_rate_percent_v1";
   const LS_SESSION_WINS = "slot_session_wins_v1";
   const LS_SPIN_TIME    = "slot_spin_time_sec_v1";   // 拉霸時間(秒)
 
@@ -68,11 +67,8 @@
   // 隱藏檔案選擇器
   const addPicker = document.getElementById("addPicker");
 
-  // 強制中獎機率(%)
-  let FORCE_JACKPOT_RATE_PERCENT = (() => {
-    const v = Number(localStorage.getItem(LS_FORCE_RATE));
-    return Number.isFinite(v) ? Math.min(100, Math.max(0, Math.floor(v))) : 20;
-  })();
+  // 強制中獎機率（固定 20%，不提供 UI 調整）
+  const FORCE_JACKPOT_RATE_PERCENT = 20;
 
   // Session wins
   let sessionWins = Number(sessionStorage.getItem(LS_SESSION_WINS)) || 0;
@@ -160,7 +156,7 @@
     if(isMuted) return; ensureAudio();
     const o=ctx.createOscillator(), g=ctx.createGain();
     o.type="sine"; o.frequency.value=300; g.gain.value=0.0001;
-    o.connect(g).connect(masterGain);              // 修正語法
+    o.connect(g).connect(masterGain);
     const t=ctx.currentTime; o.start(t);
     g.gain.exponentialRampToValueAtTime((Number(vol?.value||70)/100)*0.25, t+0.05);
     g.gain.exponentialRampToValueAtTime(0.0001, t+0.35); o.stop(t+0.4);
@@ -271,22 +267,17 @@
   const passwordArea=document.getElementById("passwordArea");
   const resetWinsAllBtn=document.getElementById("resetWinsAllBtn");
 
-  function renderForceRow(container){
-    const old=container.querySelector('.force-row'); if(old) old.remove();
-    const row=document.createElement("div"); row.className="size-row force-row";
-    const label=document.createElement("label"); label.textContent="強制中獎機率(%)：";
-    const input=document.createElement("input"); input.type="number"; input.min="0"; input.max="100"; input.step="1"; input.value=String(FORCE_JACKPOT_RATE_PERCENT);
-    const setBtn=document.createElement("button"); setBtn.textContent="設定"; setBtn.className="btn mini";
-    input.oninput=()=>{ let v=Math.floor(Number(input.value)||0); input.value=String(Math.max(0,Math.min(100,v))); };
-    setBtn.onclick=()=>{ let v=Math.floor(Number(input.value)||0); v=Math.max(0,Math.min(100,v)); FORCE_JACKPOT_RATE_PERCENT=v; try{localStorage.setItem(LS_FORCE_RATE,String(v));}catch(e){} msg.textContent=`🎯 已設定強制中獎機率為 ${v}%`; };
-    const resetBtn=document.createElement("button"); resetBtn.textContent="重置"; resetBtn.className="btn mini";
-    resetBtn.onclick=()=>{ FORCE_JACKPOT_RATE_PERCENT=20; input.value="20"; try{localStorage.setItem(LS_FORCE_RATE,"20");}catch(e){} msg.textContent="🔄 已重置強制中獎機率為 20%"; };
-    const tip=document.createElement("span"); tip.className="muted"; tip.textContent="（0 = 不啟用；預設 20）";
-    row.append(label,input,setBtn,resetBtn,tip); container.prepend(row);
-  }
+  // 不顯示任何「強制中獎機率」或其他提示行
+  function renderForceRow(){ /* intentionally empty */ }
+
   function renderConfig(){
-    cfgHost.innerHTML=""; renderForceRow(cfgArea);
-    ["人物","權重(1~10)","預覽","已中","上限","重置"].forEach(h=>{ const d=document.createElement("div"); d.className="hdr"; d.textContent=h; cfgHost.appendChild(d); });
+    cfgHost.innerHTML="";
+    // 不插入 renderForceRow()，完全不產生提示字樣
+
+    ["人物","權重(1~10)","預覽","已中","上限","重置"].forEach(h=>{
+      const d=document.createElement("div"); d.className="hdr"; d.textContent=h; cfgHost.appendChild(d);
+    });
+
     symbols.forEach((s,i)=>{
       const lim=symbolLimits[s.file]||{maxWins:0,wins:0};
       const n=document.createElement("div"); n.textContent=s.label||`照片${i+1}`;
@@ -294,17 +285,41 @@
       w.oninput=()=>{ s.weight=clampWeight(w.value); w.value=s.weight; rebuildBag(); };
       const prev=document.createElement("div"); prev.className="prevBox"; prev.title=s.file; prev.innerHTML=`<img src="${s.file}" alt="">`;
       const wins=document.createElement("div"); wins.textContent=lim.wins||0; wins.className="wins"; wins.setAttribute("data-file", s.file);
-      const maxIn=document.createElement("input"); maxIn.type="number"; maxIn.min="0"; maxIn.step="1"; maxIn.placeholder="0=不限"; maxIn.value=lim.maxWins>0?lim.maxWins:"";
+      const maxIn=document.createElement("input"); maxIn.type="number"; maxIn.min="0"; maxIn.step="1"; maxIn.placeholder=""; // 不顯示任何說明
+      maxIn.value=lim.maxWins>0?lim.maxWins:"";
       maxIn.oninput=()=>{ const v=Number(maxIn.value||0); if(!symbolLimits[s.file]) symbolLimits[s.file]={maxWins:0,wins:0}; symbolLimits[s.file].maxWins=v>0?Math.floor(v):0; saveLimits(); rebuildBag(); };
       const resetBtn=document.createElement("button"); resetBtn.className="btn mini"; resetBtn.textContent="重置";
       resetBtn.onclick=()=>{ symbolLimits[s.file]={maxWins:(Number(maxIn.value)||0), wins:0}; wins.textContent="0"; saveLimits(); rebuildBag(); updateTotalStat(); msg.textContent=`🧹 已重置「${s.label||`照片${i+1}`}」已中獎次數`; };
       cfgHost.append(n,w,prev,wins,maxIn,resetBtn);
     });
   }
-  passBtn?.addEventListener("click", ()=>{ if(passInput.value===PASSWORD){ passMsg.textContent="✅ 密碼正確"; passwordArea.style.display="none"; cfgArea.style.display="block"; renderConfig(); } else { passMsg.textContent="❌ 密碼錯誤"; } });
-  document.getElementById("applyBtn")?.addEventListener("click", ()=>{ saveLimits(); rebuildBag(); msg.textContent="✅ 已套用設定（權重/上限/機率）"; });
-  document.getElementById("resetBtn")?.addEventListener("click", ()=>{ symbols=symbols.map(s=>({...s,weight:10})); renderConfig(); rebuildBag(); msg.textContent="↩ 已重置為預設權重（機率值保留）"; });
-  resetWinsAllBtn?.addEventListener("click", ()=>{ Object.keys(symbolLimits).forEach(k=>symbolLimits[k].wins=0); saveLimits(); rebuildBag(); resetSessionWins(); updateTotalStat(); document.querySelectorAll(".wins").forEach(el=>el.textContent="0"); msg.textContent="🧹 已重置遊戲（所有已中歸零）"; });
+
+  passBtn?.addEventListener("click", ()=>{
+    if(passInput.value===PASSWORD){
+      passMsg.textContent="✅ 密碼正確";
+      passwordArea.style.display="none";
+      cfgArea.style.display="block";
+      renderConfig();
+    } else {
+      passMsg.textContent="❌ 密碼錯誤";
+    }
+  });
+
+  document.getElementById("applyBtn")?.addEventListener("click", ()=>{
+    saveLimits(); rebuildBag(); msg.textContent="✅ 已套用設定（權重/上限）";
+  });
+
+  document.getElementById("resetBtn")?.addEventListener("click", ()=>{
+    symbols=symbols.map(s=>({...s,weight:10}));
+    renderConfig(); rebuildBag(); msg.textContent="↩ 已重置為預設權重";
+  });
+
+  resetWinsAllBtn?.addEventListener("click", ()=>{
+    Object.keys(symbolLimits).forEach(k=>symbolLimits[k].wins=0);
+    saveLimits(); rebuildBag(); resetSessionWins(); updateTotalStat();
+    document.querySelectorAll(".wins").forEach(el=>el.textContent="0");
+    msg.textContent="🧹 已重置遊戲（所有已中歸零）";
+  });
 
   // 圖庫管理
   function showGallery(){ galleryModal.classList.add('show'); galleryModal.setAttribute('aria-hidden','false'); }
@@ -330,14 +345,22 @@
     });
     updateCount(); updateSpinButtonState();
   }
+
   async function filesToSymbols(fileList, remainSlots){
     const files=Array.from(fileList).filter(f=>f.type.startsWith("image/")).slice(0,remainSlots);
-    const out=[]; for(const f of files){ const url=URL.createObjectURL(f); const label=(f.name||"照片").replace(/\.[^.]+$/,""); out.push({file:url,label,weight:10}); }
+    const out=[];
+    for(const f of files){
+      const url=URL.createObjectURL(f);
+      const label=(f.name||"照片").replace(/\.[^.]+$/,"");
+      out.push({file:url,label,weight:10});
+    }
     return out;
   }
+
   function syncInitialImages(){ if(symbols[0]) img1.src=symbols[0].file; }
 
   addBtn?.addEventListener("click", ()=> addPicker.click());
+
   addPicker?.addEventListener("change", async ()=>{
     if(!addPicker.files || !addPicker.files.length) return;
     const remain=Math.max(0,10-symbols.length);
@@ -345,8 +368,10 @@
     const newSyms=await filesToSymbols(addPicker.files,remain);
     symbols=symbols.concat(newSyms); loadLimitsFromSymbols();
     await preload(newSyms); rebuildBag(); renderGallery(); renderConfig(); updateCount(); syncInitialImages();
-    msg.textContent=`✅ 已新增 ${newSyms.length} 張（目前 ${symbols.length} / 10）`; addPicker.value="";
+    msg.textContent=`✅ 已新增 ${newSyms.length} 張（目前 ${symbols.length} / 10）`;
+    addPicker.value="";
   });
+
   clearAllBtn?.addEventListener("click", ()=>{
     if(!confirm("確定要清空整個圖庫嗎？")) return;
     symbols.forEach(s=>{ try{ if(s.file.startsWith("blob:")) URL.revokeObjectURL(s.file); }catch(e){} });
