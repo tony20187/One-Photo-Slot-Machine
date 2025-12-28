@@ -2,24 +2,102 @@
   --bg1:#0b0c14; --bg2:#000; --ink:#e9ecf2; --frame:#292e42;
   --accent:#ffd54a; --ok:#38ef7d; --bad:#ff6b6b; --gold:#f5c542;
   --slot-min: 280px; --slot-max: 720px; --wrap-max: 2400px;
+
   /* 維持原本比例 (/3)，避免圖片放大變形 */
   --slot-size: clamp(var(--slot-min), calc((min(100vw, var(--wrap-max)) - 160px)/3), var(--slot-max));
+
+  /* ✅ 背景裝飾圖透明度（你說蜜蜂太淡 → 這裡拉高） */
+  --decor-opacity: 3;
+
+  /* 裝飾圖位置/尺寸 */
+  --d6-x: 11vw;  --d6-y: 15vh;  --d6-s: clamp(310px, 22vmin, 650px); --d6-r:  0deg;
+  --d1-x: 18vw;  --d1-y: 35vh;  --d1-s: clamp(330px, 22vmin, 650px); --d1-r: -8deg;
+  --d5-x: 12vw;  --d5-y: 60vh;  --d5-s: clamp(330px, 22vmin, 650px); --d5-r:  0deg;
+  --d4-x: 15vw;  --d4-y: 90vh;  --d4-s: clamp(330px, 22vmin, 650px); --d4-r: -6deg; 
+  --d3-x: 82vw;  --d3-y: 15vh;  --d3-s: clamp(330px, 22vmin, 650px); --d3-r:  8deg;
+  --d7-x: 89vw;  --d7-y: 35vh;  --d7-s: clamp(330px, 22vmin, 650px); --d7-r: -10deg;
+  --d2-x: 85vw;  --d2-y: 60vh;  --d2-s: clamp(330px, 22vmin, 650px); --d2-r:  6deg;
+  --d8-x: 88vw;  --d8-y: 90vh;  --d8-s: clamp(370px, 22vmin, 690px); --d8-r: -6deg;
+
 }
 
 *{box-sizing:border-box}
 html,body{height:100%;margin:0}
+
+/* ===============================
+   ✅ 最乾淨背景：只留淡黃色（拿掉蜂巢）
+   Layer 0：背景顏色
+   =============================== */
 body{
   color:var(--ink);
   font-family:"Noto Sans TC",system-ui,Segoe UI,Roboto,Arial,sans-serif;
+
   background:
-    url("./bg_unicorn.png") center/cover no-repeat fixed,
-    radial-gradient(circle at 50% 25%, #14172a 0%, var(--bg2) 70%);
+    radial-gradient(
+      circle at 50% 20%,
+      rgba(255, 236, 179, 0.85),
+      rgba(255, 236, 179, 0.35) 40%,
+      rgba(255, 249, 230, 0.15) 65%
+    ),
+    linear-gradient(
+      180deg,
+      #fff6d5 0%,
+      #fff9e6 45%,
+      #fef3c7 100%
+    );
+
   background-attachment: fixed;
   display:flex; flex-direction:column; align-items:center; gap:16px;
   overflow-x:hidden; overflow-y:auto; padding-bottom:260px;
+
+  position:relative;
 }
 
-/* 右上角工具列 */
+/* ===============================
+   ✅ 背景裝飾圖層（可選）
+   Layer 1：decor（不擋點擊）
+   你要在 HTML 放 .bg-decor 才會出現
+   =============================== */
+.bg-decor{
+  position:fixed;
+  inset:0;
+  z-index:1;
+  pointer-events:none;
+  overflow:hidden;
+}
+.bg-decor .decor{
+  position:absolute;
+  left: var(--x);
+  top:  var(--y);
+  width: var(--s);
+  height:auto;
+
+  transform: translate(-50%, -50%) rotate(var(--r));
+  opacity: var(--decor-opacity);
+
+  filter: drop-shadow(0 10px 22px rgba(0,0,0,.10));
+  user-select:none;
+  -webkit-user-drag:none;
+}
+.bg-decor .d1{ --x:var(--d1-x); --y:var(--d1-y); --s:var(--d1-s); --r:var(--d1-r); }
+.bg-decor .d2{ --x:var(--d2-x); --y:var(--d2-y); --s:var(--d2-s); --r:var(--d2-r); }
+.bg-decor .d3{ --x:var(--d3-x); --y:var(--d3-y); --s:var(--d3-s); --r:var(--d3-r); }
+.bg-decor .d4{ --x:var(--d4-x); --y:var(--d4-y); --s:var(--d4-s); --r:var(--d4-r); }
+.bg-decor .d5{ --x:var(--d5-x); --y:var(--d5-y); --s:var(--d5-s); --r:var(--d5-r); }
+.bg-decor .d6{ --x:var(--d6-x); --y:var(--d6-y); --s:var(--d6-s); --r:var(--d6-r); }
+.bg-decor .d7{ --x:var(--d7-x); --y:var(--d7-y); --s:var(--d7-s); --r:var(--d7-r); }
+.bg-decor .d8{ --x:var(--d8-x); --y:var(--d8-y); --s:var(--d8-s); --r:var(--d8-r); }
+/* ✅ UI 全部抬到裝飾圖之上（Layer 2） */
+.topbar,
+.title-banner,
+.wrap{
+  position:relative;
+  z-index:2;
+}
+
+/* ===============================
+   右上角工具列
+   =============================== */
 .topbar{
   position:fixed; top:10px; right:12px; z-index:20;
   display:flex; gap:8px; align-items:center;
@@ -41,6 +119,9 @@ h1{
   text-shadow:0 0 10px rgba(255,213,74,.6), 0 0 20px rgba(255,160,0,.4);
 }
 
+/* ===============================
+   外框
+   =============================== */
 .wrap{
   padding:22px; background:linear-gradient(180deg,#14192b,#0f1120);
   border:2px solid var(--frame); border-radius:22px;
@@ -58,19 +139,28 @@ h1{
   margin:0 auto;
 }
 
-/* 單格自動置中（不改尺寸計算） */
-.machine > .slot:only-child{ grid-column:2 / span 1; }
-
+/* ===============================
+   Slot
+   =============================== */
 .slot{
-  width:100%; aspect-ratio:1/1; position:relative; overflow:hidden; border-radius:14px;
-  border:3px solid #3c4055; background:#0b0d18; box-shadow:inset 0 0 20px rgba(0,0,0,.7);
+  width:100%;
+  aspect-ratio:1/1;
+  position:relative;
+  overflow:hidden;
+  border-radius:14px;
+  border:3px solid #3c4055;
+  background:#0b0d18;
+  box-shadow:inset 0 0 20px rgba(0,0,0,.7);
 }
 .slot img{
-  position:absolute; inset:0; width:100%; height:100%; object-fit:contain;
-  background:#0b0d18; filter:brightness(.98) contrast(1.02);
+  position:absolute; inset:0; width:100%; height:100%;
+  object-fit:contain;
+  background:#0b0d18;
+  filter:brightness(.98) contrast(1.02);
 }
 .slot.spin::after{
-  content:""; position:absolute; inset:0; border-radius:12px; border:1px solid rgba(255,213,74,.25);
+  content:""; position:absolute; inset:0; border-radius:12px;
+  border:1px solid rgba(255,213,74,.25);
   box-shadow:0 0 26px rgba(255,213,74,.18), inset 0 0 24px rgba(255,213,74,.08);
   animation:pulse .4s infinite alternate;
 }
@@ -99,7 +189,9 @@ h1{
     radial-gradient(circle, rgba(255,255,255,.85), rgba(255,255,255,0) 40%),
     radial-gradient(circle at 30% 30%, rgba(255,215,64,.7), rgba(255,215,64,0) 45%),
     radial-gradient(circle at 70% 70%, rgba(120,200,255,.6), rgba(120,200,255,0) 45%);
-  mix-blend-mode:screen; filter:blur(2px); animation:flashPop .9s ease-out forwards;
+  mix-blend-mode:screen;
+  filter:blur(2px);
+  animation:flashPop .9s ease-out forwards;
 }
 @keyframes flashPop{
   0%{opacity:0;transform:scale(.8)}
@@ -108,145 +200,352 @@ h1{
   100%{opacity:0;transform:scale(1.25)}
 }
 
-/* 控制列 */
+/* ===============================
+   控制列
+   =============================== */
 .control-bar{
-  position:relative; display:flex; align-items:center; justify-content:center;
+  position:relative;
+  display:flex; align-items:center; justify-content:center;
   width:100%;
   max-width:min(calc(100vw - 64px), calc(3*var(--slot-max) + 96px));
-  margin:12px auto 0; padding:0 24px;
+  margin:12px auto 0;
+  padding:0 24px;
 }
-.control-bar .wing.left{ position:absolute; left:24px; display:flex; align-items:center; gap:12px; }
-.control-bar .wing.left label{ display:flex; align-items:center; gap:6px; margin:0 }
-.control-bar .center{ display:flex; justify-content:center; align-items:center }
-.control-bar .wing.right{ position:absolute; right:24px; display:flex; align-items:flex-end; flex-direction:column }
+.control-bar .wing.left{
+  position:absolute; left:24px;
+  display:flex; align-items:center; gap:12px;
+}
+.control-bar .wing.left label{
+  display:flex; align-items:center; gap:6px; margin:0;
+}
+.control-bar .center{
+  display:flex; justify-content:center; align-items:center;
+}
+.control-bar .wing.right{
+  position:absolute; right:24px;
+  display:flex; align-items:flex-end; flex-direction:column;
+}
+
 #panelSpinBtn{
-  display:block; margin:12px auto 0; transform:translateY(-4px);
-  background:linear-gradient(180deg,#ff6aa6,#ff3b7c); color:#fff; border:0; border-radius:12px;
-  padding:12px 26px; font-size:18px; font-weight:800; box-shadow:0 6px 18px rgba(255,64,128,.45);
+  display:block;
+  margin:12px auto 0;
+  transform:translateY(-4px);
+  background:linear-gradient(180deg,#ff6aa6,#ff3b7c);
+  color:#fff;
+  border:0;
+  border-radius:12px;
+  padding:12px 26px;
+  font-size:18px;
+  font-weight:800;
+  box-shadow:0 6px 18px rgba(255,64,128,.45);
   transition:transform .15s, box-shadow .15s, opacity .15s;
 }
-#panelSpinBtn:hover{ transform:translateY(-6px); box-shadow:0 10px 24px rgba(255,64,128,.55) }
+#panelSpinBtn:hover{
+  transform:translateY(-6px);
+  box-shadow:0 10px 24px rgba(255,64,128,.55);
+}
 #panelSpinBtn:active{ transform:translateY(-2px) }
 #panelSpinBtn.disabled{ opacity:.55; pointer-events:none }
 .version-text{ font-size:13px; color:#9ca3af; margin-top:4px; opacity:.85; text-align:right }
 
-/* 參數面板 */
+/* ===============================
+   參數面板（你目前改成 Modal 用 div.config）
+   =============================== */
 details.config{
-  width:100%; max-width:1100px; background:#0f1222; border:1px solid #2b3044;
-  border-radius:14px; padding:10px 12px; color:#cfd3df; margin:16px auto 8px;
+  width:100%;
+  max-width:1100px;
+  background:#0f1222;
+  border:1px solid #2b3044;
+  border-radius:14px;
+  padding:10px 12px;
+  color:#cfd3df;
+  margin:16px auto 8px;
 }
+
 #cfg{
-  display:grid; grid-template-columns:1.2fr .9fr 1.1fr .5fr .8fr .6fr;
-  gap:8px; align-items:center;
+  display:grid;
+  grid-template-columns:1.2fr .9fr 1.1fr .5fr .8fr .6fr;
+  gap:8px;
+  align-items:center;
 }
 #cfg .hdr{ font-weight:700; opacity:.9 }
 #cfg input{
-  width:100%; padding:8px 10px; border:1px solid #3a415a;
-  background:#12162a; color:#e7ebf8; border-radius:8px;
+  width:100%;
+  padding:8px 10px;
+  border:1px solid #3a415a;
+  background:#12162a;
+  color:#e7ebf8;
+  border-radius:8px;
 }
 #cfg .prevBox{
-  width:90px; height:90px; display:flex; align-items:center; justify-content:center;
-  border:1px solid #3a415a; border-radius:8px; background:#0b0d18;
-  position:relative; overflow:hidden;
+  width:90px; height:90px;
+  display:flex; align-items:center; justify-content:center;
+  border:1px solid #3a415a;
+  border-radius:8px;
+  background:#0b0d18;
+  position:relative;
+  overflow:hidden;
 }
 #cfg .prevBox img{
-  width:100%; height:100%; object-fit:contain; border-radius:6px; background:#0b0d18;
+  width:100%; height:100%;
+  object-fit:contain;
+  border-radius:6px;
+  background:#0b0d18;
 }
 .cfg-actions{ display:flex; gap:8px; justify-content:flex-end; }
 .muted{ color:#9fb2ff; font-size:12px }
 
-/* 懸浮視窗：圖庫管理 */
+/* ===============================
+   懸浮視窗：圖庫管理
+   =============================== */
 .modal{
-  position:fixed; inset:0; z-index:100; display:none; align-items:center; justify-content:center;
-  background:rgba(0,0,0,.55); backdrop-filter:blur(4px);
+  position:fixed;
+  inset:0;
+  z-index:100;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  background:rgba(0,0,0,.55);
+  backdrop-filter:blur(4px);
 }
 .modal.show{ display:flex; }
 .modal-card{
-  width:min(92vw, 1020px); max-height:80vh; overflow:auto;
-  background:#0f1222; color:#e7ebf8; border:1px solid #2b3044; border-radius:14px; padding:14px 12px 16px;
+  width:min(92vw, 1020px);
+  max-height:80vh;
+  overflow:auto;
+  background:#0f1222;
+  color:#e7ebf8;
+  border:1px solid #2b3044;
+  border-radius:14px;
+  padding:14px 12px 16px;
   box-shadow:0 24px 80px rgba(0,0,0,.5);
 }
 .modal-head{
-  display:flex; align-items:center; justify-content:space-between; gap:8px;
-  padding:4px 6px 10px; border-bottom:1px solid #2b3044;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+  padding:4px 6px 10px;
+  border-bottom:1px solid #2b3044;
 }
-.iconbtn{ background:#171a2a; border:1px solid #2b3044; color:#cfd3df; border-radius:8px; padding:6px 10px; cursor:pointer; }
+.iconbtn{
+  background:#171a2a;
+  border:1px solid #2b3044;
+  color:#cfd3df;
+  border-radius:8px;
+  padding:6px 10px;
+  cursor:pointer;
+}
 
-.gallery-toolbar{ display:flex; align-items:center; gap:10px; margin:10px 6px 12px; }
+.gallery-toolbar{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin:10px 6px 12px;
+}
 .gallery-toolbar .grow{ flex:1 }
 .gallery-grid{
-  display:grid; grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); gap:10px; padding:4px 6px 10px;
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(140px,1fr));
+  gap:10px;
+  padding:4px 6px 10px;
 }
 .gitem{
-  position:relative; background:#0b0d18; border:1px solid #3a415a; border-radius:10px;
-  padding:8px; display:flex; align-items:center; justify-content:center; aspect-ratio:1/1;
+  position:relative;
+  background:#0b0d18;
+  border:1px solid #3a415a;
+  border-radius:10px;
+  padding:8px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  aspect-ratio:1/1;
 }
 .gitem img{ width:100%; height:100%; object-fit:contain }
 .gitem .rm{
-  position:absolute; top:6px; right:6px; border:none; border-radius:8px;
-  padding:4px 8px; background:#2a1717; color:#ffb3b3; cursor:pointer;
+  position:absolute; top:6px; right:6px;
+  border:none; border-radius:8px;
+  padding:4px 8px;
+  background:#2a1717;
+  color:#ffb3b3;
+  cursor:pointer;
 }
 
-/* 開機選圖層 */
+/* ===============================
+   開機選圖層
+   =============================== */
 .overlay{
-  position:fixed; inset:0; z-index:90; display:flex; align-items:center; justify-content:center;
-  background:rgba(0,0,0,.55); backdrop-filter:blur(4px);
+  position:fixed;
+  inset:0;
+  z-index:90;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:rgba(0,0,0,.55);
+  backdrop-filter:blur(4px);
 }
 .overlay-card{
-  width:min(92vw, 560px); background:#0f1222; color:#e7ebf8; border:1px solid #2b3044;
-  border-radius:14px; padding:22px; text-align:center; box-shadow:0 24px 80px rgba(0,0,0,.5);
+  width:min(92vw, 560px);
+  background:#0f1222;
+  color:#e7ebf8;
+  border:1px solid #2b3044;
+  border-radius:14px;
+  padding:22px;
+  text-align:center;
+  box-shadow:0 24px 80px rgba(0,0,0,.5);
 }
-.overlay-actions{ display:flex; gap:10px; justify-content:center; margin-top:12px }
+.overlay-actions{
+  display:flex;
+  gap:10px;
+  justify-content:center;
+  margin-top:12px;
+}
 
-/* RWD */
+/* ===============================
+   RWD
+   =============================== */
 @media (max-width:1024px){
   #cfg{ grid-template-columns:1fr .8fr 1fr .5fr .8fr .6fr; }
 }
 @media (max-width:600px){
   #panelSpinBtn{ font-size:16px; padding:11px 22px; transform:translateY(-2px) }
+  :root{ --decor-opacity: 0.60; }
+  :root{
+    --d1-x: 8vw;  --d1-y: 18vh;
+    --d2-x: 92vw; --d2-y: 18vh;
+    --d5-x: 18vw; --d5-y: 92vh;
+    --d6-x: 86vw; --d6-y: 92vh;
+  }
 }
 
 /* Hover 放大預覽（參數面板＋圖庫） */
 @media (hover: hover){
-  #cfg .prevBox{ position:relative; overflow:hidden; transition:transform .15s, box-shadow .15s; }
+  #cfg .prevBox{ transition:transform .15s, box-shadow .15s; }
   #cfg .prevBox img{
-    width:100%; height:100%; object-fit:contain; border-radius:6px; background:#0b0d18;
-    transition:transform .15s, box-shadow .15s, filter .15s; transform-origin:center center;
+    transition:transform .15s, box-shadow .15s, filter .15s;
+    transform-origin:center center;
   }
   #cfg .prevBox:hover{ overflow:visible; z-index:50; }
-  #cfg .prevBox:hover img{ transform:scale(5); box-shadow:0 12px 26px rgba(0,0,0,.55); filter:brightness(1) contrast(1.05); }
+  #cfg .prevBox:hover img{
+    transform:scale(5);
+    box-shadow:0 12px 26px rgba(0,0,0,.55);
+    filter:brightness(1) contrast(1.05);
+  }
 
-  .gitem{ position:relative; overflow:hidden; }
+  .gitem{ overflow:hidden; }
   .gitem img{ transition:transform .15s, box-shadow .15s, filter .15s; transform-origin:center center; }
   .gitem:hover{ overflow:visible; z-index:40; }
-  .gitem:hover img{ transform:scale(2.6); box-shadow:0 12px 26px rgba(0,0,0,.55); filter:brightness(1) contrast(1.05); }
+  .gitem:hover img{
+    transform:scale(2.6);
+    box-shadow:0 12px 26px rgba(0,0,0,.55);
+    filter:brightness(1) contrast(1.05);
+  }
 }
 
-/* ===== 單格穩定修正（只追加，不改原樣） ===================== */
-/* 支援 :has 的情況：單格時把外框縮到單格寬，並改為單欄 */
+/* ===============================
+   單格模式（兩種方式都支援）
+   1) 支援 :has：自動單格收窄
+   2) 不支援 :has：用 .single class 控制
+   =============================== */
+
+/* ✅ 1) :has 自動單格 */
 .machine:has(.slot:only-child){
-  max-width:min(calc(100vw - 64px), calc(var(--slot-size) + 96px));
-  grid-template-columns:repeat(1,1fr);
+  grid-template-columns: 1fr;
+  max-width: calc(var(--slot-size) + 64px);
+  justify-items:center;
 }
-/* 不論是否支援 :has，都讓單格置中並確保正確大小 */
+.wrap:has(.machine .slot:only-child){
+  max-width: calc(var(--slot-size) + 96px);
+}
+
+/* ✅ 2) class 單格（你 JS 要加 class="single"） */
+.wrap.single{
+  max-width: calc(var(--slot-size) + 96px);
+}
+.machine.single{
+  grid-template-columns: 1fr;
+  max-width: calc(var(--slot-size) + 64px);
+  justify-items: center;
+}
+
+/* 單格尺寸固定（不影響三格） */
 .machine{ justify-items:center; }
-.machine > .slot:only-child{ grid-column:2 / span 1; }
 .machine > .slot{
   width:var(--slot-size);
   max-width:100%;
   min-height:var(--slot-min);
 }
 
-/* 拉霸時間滑桿樣式 */
-#spinTimeRange {
+/* ===============================
+   拉霸時間滑桿樣式
+   =============================== */
+#spinTimeRange{
   width: 120px;
   accent-color: #ff3b7c;
   vertical-align: middle;
 }
-#spinTimeValue {
+#spinTimeValue{
   display: inline-block;
   width: 24px;
   text-align: center;
   color: #ffd54a;
   font-weight: 700;
+}
+
+/* ===============================
+   設定視窗（Modal）追加
+   =============================== */
+.cfg-modal-card{
+  width: min(92vw, 1200px);
+  max-height: 82vh;
+}
+.config-modal-body{
+  width:100%;
+  max-width:none;
+  margin:0;
+}
+.cfg-title-inline{
+  font-weight:800;
+  margin:6px 0 10px;
+  color:#ffd54a;
+  letter-spacing:1px;
+}
+.config{
+  width:100%;
+  max-width:1100px;
+  background:#0f1222;
+  border:1px solid #2b3044;
+  border-radius:14px;
+  padding:10px 12px;
+  color:#cfd3df;
+  margin:12px auto 8px;
+}
+.cfg-section{
+  border:1px solid #2b3044;
+  background:#10142a;
+  border-radius:12px;
+  padding:10px 12px;
+  margin:8px 0 10px;
+}
+.cfg-section-title{
+  font-weight:800;
+  color:#ffd54a;
+  letter-spacing:1px;
+  margin:0 0 8px;
+}
+.cfg-row{
+  display:flex;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:12px;
+}
+.cfg-row label{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin:0;
+}
+#vol{
+  width:140px;
+  accent-color:#4aa3ff;
 }

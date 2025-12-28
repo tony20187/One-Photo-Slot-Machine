@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>｜華谷電機｜自選單格照片拉霸機｜v2025.10.20-1|製作者：華谷電機機工課雷射組 副組長 李書宏|</title>
+  <title>｜華谷電機｜自選單格照片拉霸機｜v2025.12.27-2|製作者：華谷電機機工課雷射組 副組長 李書宏|</title>
   <link rel="icon" type="image/x-icon" href="./icon.ico" />
   <link rel="stylesheet" href="styles.css" />
   <script>
@@ -18,9 +18,23 @@
 </head>
 
 <body>
+  <!-- ✅ 背景裝飾層（不擋點擊、可獨立控制位置/大小、RWD） -->
+  <div class="bg-decor" aria-hidden="true">
+    <!-- 你的圖放在 /images 資料夾內：1.png ~ 7.png -->
+    <img class="decor d1" src="./images/9-1-1.png" alt="" />
+    <img class="decor d2" src="./images/9-2-1.png" alt="" />
+    <img class="decor d3" src="./images/9-3-1.png" alt="" />
+    <img class="decor d4" src="./images/9-4-1.png" alt="" />
+    <img class="decor d5" src="./images/9-5-1.png" alt="" />
+    <img class="decor d6" src="./images/9-6-1.png" alt="" />
+    <img class="decor d7" src="./images/9-7-1.png" alt="" />
+    <img class="decor d8" src="./images/9-8-1.png" alt="" />
+  </div>
+
   <!-- 右上角工具列 -->
   <div class="topbar">
     <button id="openGalleryBtn" class="btn pill small">📷 圖庫管理</button>
+    <button id="openCfgBtn" class="btn pill small">⚙️ 設定</button>
   </div>
 
   <div class="title-banner">
@@ -36,51 +50,17 @@
     <div id="msg" class="message">請先載入 3～10 張照片。</div>
 
     <div class="control-bar">
-      <div class="wing left">
-        <div class="toggle" id="muteBtn">🔊 聲音：開</div>
-        <label>音量 <input type="range" id="vol" min="0" max="100" value="70" /></label>
-      
-  <label>🎚 拉霸時間：
-    <input id="spinTimeRange" type="range" min="0" max="10" step="1">
-  </label>
-  <span id="spinTimeValue"></span> 秒
-</div>
+      <div class="wing left"></div>
 
       <div class="center">
         <button id="panelSpinBtn" class="btn primary disabled">🎰 拉霸！( START )</button>
       </div>
 
       <div class="wing right">
-        <div class="stat" id="totalStat">總連線中獎次數：0</div>
-        <div class="version-text" id="versionText">版本：v2025.10.20-1</div>
+        <div class="version-text" id="versionText">版本：v2025.12.27-2</div>
       </div>
     </div>
   </div>
-
-  <!-- ⚙️ 參數調整面板（需密碼） -->
-  <details class="config">
-    <summary>⚙️ 參數調整面板（需密碼）</summary>
-
-    <div id="passwordArea">
-      <input type="password" id="passInput" placeholder="輸入密碼" />
-      <button class="btn" id="passBtn">確定</button>
-      <span id="passMsg"></span>
-    </div>
-
-    <div id="cfgContainer" style="display:none;">
-      <div class="muted">
-        上限：0 或空白＝不限制。達上限者會暫時移出轉盤，重置後回復。
-      </div>
-
-      <div id="cfg" class="cfg-grid"></div>
-
-      <div class="cfg-actions">
-        <button class="btn" id="applyBtn">套用設定</button>
-        <button class="btn" id="resetWinsAllBtn">重置遊戲</button>
-        <button class="btn" id="resetBtn">重置預設</button>
-      </div>
-    </div>
-  </details>
 
   <!-- ✅ 首次必選照片的選圖層 -->
   <div id="pickerOverlay" class="overlay" style="display:none;">
@@ -91,6 +71,56 @@
         <button id="chooseBtn" class="btn primary">選擇照片</button>
       </div>
       <p class="muted">＊請載入照片，系統抓檔名區分權重。＊</p>
+    </div>
+  </div>
+
+  <!-- ⚙️ 設定視窗（彈出） -->
+  <div id="cfgModal" class="modal" aria-hidden="true">
+    <div class="modal-card cfg-modal-card" role="dialog" aria-modal="true" aria-labelledby="cfgTitle">
+      <div class="modal-head">
+        <h3 id="cfgTitle">⚙️ 參數調整（需密碼）</h3>
+        <button id="closeCfgBtn" class="iconbtn" aria-label="關閉">✕</button>
+      </div>
+
+      <div class="config config-modal-body">
+        <div class="cfg-title-inline">⚙️ 參數調整面板（需密碼）</div>
+
+        <div id="passwordArea">
+          <input type="password" id="passInput" placeholder="輸入密碼" />
+          <button class="btn" id="passBtn">確定</button>
+          <span id="passMsg"></span>
+        </div>
+
+        <div id="cfgContainer" style="display:none;">
+          <div class="cfg-section">
+            <div class="cfg-section-title">🔊 聲音與拉霸時間</div>
+            <div class="cfg-row">
+              <div class="toggle" id="muteBtn">🔊 聲音：開</div>
+
+              <label>音量
+                <input type="range" id="vol" min="0" max="100" value="70" />
+              </label>
+
+              <label>🎚 拉霸時間：
+                <input id="spinTimeRange" type="range" min="0" max="10" step="1">
+              </label>
+              <span id="spinTimeValue"></span> 秒
+            </div>
+          </div>
+
+          <div class="muted">
+            上限：0 或空白＝不限制。達上限者會暫時移出轉盤，重置後回復。
+          </div>
+
+          <div id="cfg" class="cfg-grid"></div>
+
+          <div class="cfg-actions">
+            <button class="btn" id="applyBtn">套用設定</button>
+            <button class="btn" id="resetWinsAllBtn">重置遊戲</button>
+            <button class="btn" id="resetBtn">重置預設</button>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 

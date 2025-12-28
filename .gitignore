@@ -25,3 +25,11 @@ temp/
 *.bak
 *.tmp
 release/*.exe
+
+
+node_modules/
+dist/
+release/
+npm-debug.log*
+.DS_Store
+Thumbs.db

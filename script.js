@@ -4,6 +4,9 @@
   const LS_SESSION_WINS = "slot_session_wins_v1";
   const LS_SPIN_TIME    = "slot_spin_time_sec_v1";   // 拉霸時間(秒)
 
+  // ✅ 只轉照片模式（不顯示中獎/未中獎、不累計任何中獎次數）
+  const SPIN_ONLY = true;
+
   // 相片池（使用者自選）
   let symbols = [];                 // {file,label,weight}
   let symbolLimits = {};            // {file:{maxWins,wins}}
@@ -21,6 +24,37 @@
   const totalStat = document.getElementById("totalStat");
   const panelSpinBtn = document.getElementById("panelSpinBtn");
   const root = document.body;
+
+  // ⚙️ 設定（Modal）
+  const openCfgBtn   = document.getElementById("openCfgBtn");
+  const cfgModal     = document.getElementById("cfgModal");
+  const closeCfgBtn  = document.getElementById("closeCfgBtn");
+
+  function showCfgModal(){
+    if(!cfgModal) return;
+    cfgModal.classList.add("show");
+    cfgModal.setAttribute("aria-hidden","false");
+    // 每次打開回到輸入密碼畫面
+    try{
+      const passInput = document.getElementById("passInput");
+      const passMsg   = document.getElementById("passMsg");
+      const passwordArea = document.getElementById("passwordArea");
+      const cfgArea = document.getElementById("cfgContainer");
+      if(passInput) passInput.value = "";
+      if(passMsg) passMsg.textContent = "";
+      if(passwordArea) passwordArea.style.display = "block";
+      if(cfgArea) cfgArea.style.display = "none";
+    }catch(e){}
+  }
+  function hideCfgModal(){
+    if(!cfgModal) return;
+    cfgModal.classList.remove("show");
+    cfgModal.setAttribute("aria-hidden","true");
+  }
+  openCfgBtn?.addEventListener("click", showCfgModal);
+  closeCfgBtn?.addEventListener("click", hideCfgModal);
+  cfgModal?.addEventListener("click", (e)=>{ if(e.target===cfgModal) hideCfgModal(); });
+
 
   // === 拉霸時間控制：每次載入都強制預設 3 秒 =====================
   const spinTimeRange = document.getElementById("spinTimeRange");
@@ -68,7 +102,7 @@
   const addPicker = document.getElementById("addPicker");
 
   // 強制中獎機率（固定 20%，不提供 UI 調整）
-  const FORCE_JACKPOT_RATE_PERCENT = 20;
+  const FORCE_JACKPOT_RATE_PERCENT = 0;
 
   // Session wins
   let sessionWins = Number(sessionStorage.getItem(LS_SESSION_WINS)) || 0;
@@ -80,7 +114,7 @@
     sessionWins = 0;
     try { sessionStorage.removeItem(LS_SESSION_WINS); } catch(e){}
   };
-  const updateTotalStat = ()=> totalStat && (totalStat.textContent = `總連線中獎次數：${sessionWins}`);
+  const updateTotalStat = ()=> totalStat && (totalStat.textContent = `總轉動次數：${sessionWins}`);
 
   // 上限/次數
   function saveLimits(){ try{ localStorage.setItem(LS_SYMBOL_LIMITS, JSON.stringify(symbolLimits)); }catch(e){} }
@@ -208,30 +242,21 @@
 
     // 依設定秒數（重開預設3s；可調 0~10s）自動停止
     const rate = Math.min(100, Math.max(0, Number(FORCE_JACKPOT_RATE_PERCENT)||0)) / 100;
-    pendingHit   = Math.random() < rate;
-    plannedFinal = pick();
+    pendingHit   = false;
+plannedFinal = pick();
 
     if(pendingTimer) { clearTimeout(pendingTimer); pendingTimer=null; }
     const delayMs = Math.max(0, Math.min(10, spinTimeSec)) * 1000;
     pendingTimer = setTimeout(()=>{ stopAndFinishAt(plannedFinal, pendingHit); }, delayMs);
   }
 
-  function finish(hit, sym){
+    function finish(hit, sym){
     if(pendingTimer){ clearTimeout(pendingTimer); pendingTimer=null; }
     sfxSpinStop(); spinning=false; panelSpinBtn?.classList.remove('disabled');
 
-    if(hit){
-      const lim = symbolLimits[sym.file] || {maxWins:0,wins:0};
-      lim.wins=(lim.wins||0)+1; symbolLimits[sym.file]=lim; saveLimits();
-      incSessionWins(); updateTotalStat();
-      msg.className="message ok"; msg.textContent=`🎉 中獎！（第 ${lim.wins} 次）`;
-      if(lim.maxWins>0 && lim.wins>=lim.maxWins) rebuildBag();
-      const winsSpan = document.querySelector(`[data-file="${CSS?.escape?CSS.escape(sym.file):sym.file}"].wins`);
-      if(winsSpan) winsSpan.textContent=String(lim.wins);
-      root.classList.add("win-flash"); markWinSlot(true); setTimeout(()=>root.classList.remove("win-flash"),900); sfxWin();
-    }else{
-      msg.className="message bad"; msg.textContent="未中獎，再試一次！（Space）"; sfxLose();
-    }
+    // ✅ 只轉照片：不做中獎/未中獎判斷、不累計次數、不閃光
+    msg.className="message";
+    msg.textContent = "✅ 請按拉霸再次轉盤";
     setTimeout(()=>panelSpinBtn?.classList.remove('press-glow'),300);
   }
 
@@ -247,7 +272,7 @@
       img1.src=plannedFinal.file;
     }
     const rate = Math.min(100, Math.max(0, Number(FORCE_JACKPOT_RATE_PERCENT)||0)) / 100;
-    const hit = Math.random() < rate;
+    const hit = false;
     finish(hit, plannedFinal);
   }
 
@@ -274,7 +299,7 @@
     cfgHost.innerHTML="";
     // 不插入 renderForceRow()，完全不產生提示字樣
 
-    ["人物","權重(1~10)","預覽","已中","上限","重置"].forEach(h=>{
+    ["人物","權重(1~10)","預覽","次數","上限","重置"].forEach(h=>{
       const d=document.createElement("div"); d.className="hdr"; d.textContent=h; cfgHost.appendChild(d);
     });
 
@@ -289,7 +314,7 @@
       maxIn.value=lim.maxWins>0?lim.maxWins:"";
       maxIn.oninput=()=>{ const v=Number(maxIn.value||0); if(!symbolLimits[s.file]) symbolLimits[s.file]={maxWins:0,wins:0}; symbolLimits[s.file].maxWins=v>0?Math.floor(v):0; saveLimits(); rebuildBag(); };
       const resetBtn=document.createElement("button"); resetBtn.className="btn mini"; resetBtn.textContent="重置";
-      resetBtn.onclick=()=>{ symbolLimits[s.file]={maxWins:(Number(maxIn.value)||0), wins:0}; wins.textContent="0"; saveLimits(); rebuildBag(); updateTotalStat(); msg.textContent=`🧹 已重置「${s.label||`照片${i+1}`}」已中獎次數`; };
+      resetBtn.onclick=()=>{ symbolLimits[s.file]={maxWins:(Number(maxIn.value)||0), wins:0}; wins.textContent="0"; saveLimits(); rebuildBag(); updateTotalStat(); msg.textContent=`🧹 已重置「${s.label||`照片${i+1}`}」次數`; };
       cfgHost.append(n,w,prev,wins,maxIn,resetBtn);
     });
   }
@@ -318,7 +343,7 @@
     Object.keys(symbolLimits).forEach(k=>symbolLimits[k].wins=0);
     saveLimits(); rebuildBag(); resetSessionWins(); updateTotalStat();
     document.querySelectorAll(".wins").forEach(el=>el.textContent="0");
-    msg.textContent="🧹 已重置遊戲（所有已中歸零）";
+    msg.textContent="🧹 已重置（所有次數歸零）";
   });
 
   // 圖庫管理
@@ -401,4 +426,11 @@
     updateTotalStat();
   }
   init();
+})();
+(() => {
+  const slots = document.querySelectorAll(".machine .slot");
+  if (slots.length === 1) {
+    document.querySelector(".wrap")?.classList.add("single");
+    document.querySelector(".machine")?.classList.add("single");
+  }
 })();
